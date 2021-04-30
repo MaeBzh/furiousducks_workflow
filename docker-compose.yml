@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
     jenkins:
-        image: 'jenkins/jenkins:latest'
+        build:
+            context: ./
+        restart: unless-stopped
         container_name: "jenkins"
         ports:
             - '8080:8080'
@@ -11,7 +13,7 @@ services:
         volumes:
             - jenkins_data:/var/jenkins_home
             - ~/.ssh/jenkins:/home/jenkins/.ssh
-        command: sh -c "curl -L 'https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)' -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+            - /var/run/docker.sock:/var/run/docker.sock         
 volumes:
     jenkins_data:
     
