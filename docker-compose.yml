@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
     jenkins:
@@ -6,6 +6,8 @@ services:
             context: ./
         restart: unless-stopped
         container_name: "jenkins"
+        env_file:
+            - .env.docker
         ports:
             - '8080:8080'
             - '443:443'
@@ -16,18 +18,18 @@ services:
             - ~/.ssh/jenkins:/home/jenkins/.ssh
             - /var/run/docker.sock:/var/run/docker.sock  
             - /usr/bin/docker:/usr/bin/docker 
+        networks:
+            - tigk-nw
 
     sonarqube:
         image: sonarqube
         container_name: sonarqube
+        env_file:
+            - .env.docker
         ports:
             - '9000:9000'
         networks: 
             - sonar-nw
-        environment: 
-            - SONARQUBE_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
-            - SONARQUBE_JDBC_USERNAME=sonar
-            - SONARQUBE_JDBC_PASSWORD=sonar
         volumes: 
             - sonarqube_conf:/opt/sonarqube/conf
             - sonarqube_data:/opt/sonarqube/data
@@ -38,17 +40,72 @@ services:
         image: postgres
         networks:
             - sonar-nw
+        env_file:
+            - .env.docker
         ports: 
             - '5432:5432'
-        environment: 
-            - POSTGRES_USER=sonar
-            - POSTGRES_PASSWORD=sonar
         volumes:
             - postgresql:/var/lib/postgresql
             - postgresql_data:/var/lib/postgresql/data
+            
+    influxdb:
+        image: influxdb:1.8-alpine
+        container_name: influxdb
+        restart: always
+        env_file:
+            - .env.docker
+        ports:
+            - 8086:8086
+        volumes:
+            - influxdb_data:/var/lib/influxdb
+            - ./influx_init.iql:/docker-entrypoint-initdb.d/influx_init.iql
+        networks:
+            - tigk-nw  
+
+    telegraf:
+        image: telegraf:1.21
+        container_name: telegraf
+        restart: always
+        env_file:
+            - .env.docker
+        volumes:
+            - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+        environment:
+            - HOST_ETC=/hostfs/etc
+            - HOST_PROC=/hostfs/proc
+            - HOST_SYS=/hostfs/sys
+            - HOST_VAR=/hostfs/var
+            - HOST_RUN=/hostfs/run
+            - HOST_MOUNT_PREFIX=/hostfs
+        ports:
+            - 8125:8125
+        depends_on:
+            - influxdb 
+        links:
+            - influxdb
+        networks:
+            - tigk-nw  
+
+    grafana:
+        image: grafana/grafana-oss:8.2.6
+        container_name: grafana-server
+        restart: always
+        env_file:
+            - .env.docker
+        depends_on:
+            - influxdb
+        links:
+            - influxdb
+        ports:
+            - 3000:3000
+        volumes:
+            - grafana_data:/var/lib/grafana
+        networks:
+            - tigk-nw
         
 networks: 
     sonar-nw:
+    tigk-nw:
     
 volumes:
     jenkins_data:
@@ -58,5 +115,7 @@ volumes:
     sonarqube_ext: 
     postgresql:
     postgresql_data:   
+    grafana_data:
+    influxdb_data:
     
     

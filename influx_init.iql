@@ -1,0 +1,4 @@
+CREATE DATABASE "fatboar-prod"
+CREATE DATABASE "fatboar-preprod"
+CREATE DATABASE "backups"
+CREATE DATABASE "workflow"
