@@ -1,0 +1,34 @@
+version: '3.3'
+
+services:    
+    glpidb:
+        image: mariadb:10.7
+        container_name: glpidb
+        hostname: mariadb
+        volumes:
+            - /var/lib/mysql:/var/lib/mysql
+        networks:
+            - glpi-nw
+        env_file:
+            - ../.env.docker
+        restart: always
+
+    glpi:
+        image: diouxx/glpi
+        container_name : glpi
+        hostname: glpi
+        ports:
+            - "80:80"
+        env_file:
+            - ../.env.docker
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/www/html/glpi/:/var/www/html/glpi
+        networks:
+            - glpi-nw
+        restart: always
+        depends_on:
+            - glpidb
+        
+networks: 
+    glpi-nw:    
