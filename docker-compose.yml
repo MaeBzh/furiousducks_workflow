@@ -86,16 +86,17 @@ services:
         networks:
             - tigk-nw  
 
-    kapacitor:
-        image: kapacitor:1.5
+    prometheus:
+        image: prom/prometheus:v2.30.3
         ports:
-            - 9092:9092
+            - 9000:9000
         volumes:
-            - ./kapacitor:/var/lib/kapacitor
+            - ./prometheus:/etc/prometheus
+            - prometheus_data:/prometheus
         depends_on:
             - influxdb
         networks:
-            - tigk_nw
+            - tigk-nw
 
     grafana:
         image: grafana/grafana-oss:8.2.6
@@ -113,6 +114,32 @@ services:
             - grafana_data:/var/lib/grafana
         networks:
             - tigk-nw
+
+    glpidb:
+        image: mariadb:10.7
+        container_name: glpidb
+        hostname: mariadb
+        volumes:
+            - /var/lib/mysql:/var/lib/mysql
+        env_file:
+            - .env.docker
+        restart: always
+
+    glpi:
+        image: diouxx/glpi
+        container_name : glpi
+        hostname: glpi
+        ports:
+            - "80:80"
+        volumes:
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+            - /var/www/html/glpi/:/var/www/html/glpi
+        environment:
+            - 
+        restart: always
+        depends_on:
+            - glpidb
         
 networks: 
     sonar-nw:
@@ -128,5 +155,6 @@ volumes:
     postgresql_data:   
     grafana_data:
     influxdb_data:
+    prometheus_data:
     
     
