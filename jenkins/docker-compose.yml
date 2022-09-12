@@ -10,9 +10,9 @@ services:
             - ../.env.docker
         ports:
             - '8080:8080'
-            - '443:443'
-            - '50000:50000'
-            - '3307:3306'
+            - 443:443
+            - 50000:50000
+            - 3307:3306
         volumes:
             - jenkins_data:/var/jenkins_home
             - ~/.ssh/jenkins:/home/jenkins/.ssh
@@ -22,8 +22,6 @@ services:
     sonarqube:
         image: bitnami/sonarqube:8.9.9
         container_name: sonarqube
-        env_file:
-            - ../.env.docker
         ports:
             - 8081:8080
             - 8443:8443
@@ -32,9 +30,9 @@ services:
         volumes: 
             - sonarqube_data:/bitnami/sonarqube
             - ./sonarqube/:/bitnami/sonarqube
-    
+
     sonardb:
-        image: postgres
+        image: postgres:14
         networks:
             - sonar-nw
         env_file:
