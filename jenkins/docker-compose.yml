@@ -20,19 +20,18 @@ services:
             - /usr/bin/docker:/usr/bin/docker        
 
     sonarqube:
-        image: sonarqube
+        image: bitnami/sonarqube:8.9.9
         container_name: sonarqube
         env_file:
             - ../.env.docker
         ports:
-            - '9000:9000'
+            - 8081:8080
+            - 8443:8443
         networks: 
             - sonar-nw
         volumes: 
-            - sonarqube_conf:/opt/sonarqube/conf
-            - sonarqube_data:/opt/sonarqube/data
-            - sonarqube_logs:/opt/sonarqube/logs
-            - sonarqube_ext:/opt/sonarqube/extensions
+            - sonarqube_data:/bitnami/sonarqube
+            - ./sonarqube/:/bitnami/sonarqube
     
     sonardb:
         image: postgres
@@ -40,11 +39,9 @@ services:
             - sonar-nw
         env_file:
             - ../.env.docker
-        ports: 
-            - '5432:5432'
         volumes:
-            - postgresql:/var/lib/postgresql
-            - postgresql_data:/var/lib/postgresql/data          
+            - postgresql_data:/bitnami/postgresql
+            - ./postgresql/:/bitnami/postgresql        
            
 networks: 
     sonar-nw:
